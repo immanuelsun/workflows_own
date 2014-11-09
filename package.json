@@ -6,5 +6,9 @@
     "type": "git",
     "url": "https://github.com/immanuelsun888/workflows_own"
   },
-  "author": "Immanuel Sun"
+  "author": "Immanuel Sun",
+  "devDependencies": {
+    "gulp": "~3.8.10",
+    "gulp-util": "~3.0.1"
+  }
 }
