@@ -9,6 +9,8 @@ var gulp = require('gulp'),
     uglify = require('gulp-uglify'),
     minifyHTML = require('gulp-minify-html'),
     jsonminify = require('gulp-jsonminify'),
+    imagemin = require('gulp-imagemin'),
+    pngcrush = require('imagemin-pngcrush'),
     concat = require('gulp-concat');
 
 // Variables
@@ -24,10 +26,10 @@ var env,
 env = process.env.NODE_ENV || 'development';
 
 if (env==='development') {
-    outputDir = 'builds/development';
+    outputDir = 'builds/development/';
     sassStyle = 'expanded';
 } else {
-    outputDir = 'builds/production';
+    outputDir = 'builds/production/';
     sassStyle = 'compressed';
 }
 
@@ -40,8 +42,8 @@ jsSources = [
   'components/scripts/template.js'
 ];
 sassSources = ['components/sass/style.scss'];
-htmlSources = [outputDir + '/*.html'];
-jsonSources = [outputDir + '/js/*.json'];
+htmlSources = [outputDir + '*.html'];
+jsonSources = [outputDir + 'js/*.json'];
 
 
 // Gulp Tasks
@@ -65,7 +67,7 @@ gulp.task('compass', function() {
   gulp.src(sassSources)
     .pipe(compass({
       sass: 'components/sass',
-      image: outputDir + '/images',
+      image: outputDir + 'images',
       style: sassStyle
     })
     .on('error', gutil.log))
@@ -77,6 +79,17 @@ gulp.task('html', function() {
   gulp.src('builds/development/*.html')
     .pipe(gulpif(env === 'production', minifyHTML()))
     .pipe(gulpif(env === 'production', gulp.dest(outputDir)))
+    .pipe(connect.reload())
+});
+
+gulp.task('images', function() {
+    gulp.src('builds/development/images/**/*.*')
+    .pipe(gulpif(env === 'production', imagemin({
+            progressive: true,
+            svgoPlugins: [{removeViewBox: false}],
+            use: [pngcrush()]
+    })))
+    .pipe(gulpif(env === 'production', gulp.dest( outputDir + 'images')))
     .pipe(connect.reload())
 });
 
@@ -99,7 +112,8 @@ gulp.task('watch', function() {
   gulp.watch(jsSources, ['js']);
   gulp.watch('components/sass/*.scss', ['compass']);
   gulp.watch('builds/development/*.html', ['html']);
+  gulp.watch('builds/development/images/**/*.*', ['images']);
   gulp.watch('builds/development/js/*.json', ['json']);
 });
 
-gulp.task('default', ['html', 'json', 'coffee', 'js', 'compass', 'connect', 'watch']);
+gulp.task('default', ['html', 'json', 'images', 'coffee', 'js', 'compass', 'connect', 'watch']);
